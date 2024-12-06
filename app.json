@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Gjej-Makine-AL",
-    "slug": "Gjej-Makine-AL",
+    "slug": "gjej-makine-al",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/gjm-icon.png",
@@ -38,6 +38,15 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "2a3a65b9-5b06-4cb0-b60f-85866977d07c"
+      }
+    },
+    "owner": "kleviss.x"
   }
 }
