@@ -11,13 +11,15 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.gjejmakine.al",
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "jsEngine": "hermes"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/gjm-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "jsEngine": "hermes"
     },
     "web": {
       "bundler": "metro",
