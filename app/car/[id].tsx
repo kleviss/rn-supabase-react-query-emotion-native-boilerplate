@@ -3,6 +3,7 @@ import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 
 // Mock data - in a real app, this would come from an API
 const MOCK_CAR = {
@@ -28,7 +29,7 @@ const MOCK_CAR = {
   images: [
     'https://images.unsplash.com/photo-1617469767053-d3b523a0b982?w=800',
     'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800',
-    'https://images.unsplash.com/photo-1617654112372-70a6c2599cc0?w=800',
+    'https://images.unsplash.com/photo-1485463611174-f302f6a5c1c9?q=80&w=2976&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
   ],
   seller: {
     name: 'John Doe',
@@ -40,19 +41,32 @@ const MOCK_CAR = {
 export default function CarDetailsScreen() {
   const { id } = useLocalSearchParams();
   const car = MOCK_CAR; // In real app, fetch car by id
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   return (
     <ThemedView style={styles.container}>
       <ScrollView style={styles.scrollView}>
         <View style={styles.imageContainer}>
-          <Image source={{ uri: car.images[0] }} style={styles.mainImage} />
+          <Image
+            source={{ uri: car.images[selectedImageIndex] }}
+            style={styles.mainImage}
+            resizeMode="cover"
+          />
           <View style={styles.thumbnailContainer}>
             {car.images.map((image, index) => (
-              <Image
+              <Pressable
                 key={index}
-                source={{ uri: image }}
-                style={styles.thumbnail}
-              />
+                onPress={() => setSelectedImageIndex(index)}
+                style={[
+                  styles.thumbnailWrapper,
+                  selectedImageIndex === index && styles.selectedThumbnail,
+                ]}>
+                <Image
+                  source={{ uri: image }}
+                  style={styles.thumbnail}
+                  resizeMode="cover"
+                />
+              </Pressable>
             ))}
           </View>
         </View>
@@ -120,6 +134,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     backgroundColor: 'white',
+    borderRadius: 12,
   },
   mainImage: {
     width: '100%',
@@ -129,11 +144,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 8,
     gap: 8,
+    borderRadius: 12,
+  },
+  thumbnailWrapper: {
+    borderRadius: 4,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'transparent',
+    backgroundColor: '#f8f9fa',
+  },
+  selectedThumbnail: {
+    borderColor: '#2563eb',
+    backgroundColor: '#f8f9fa',
+    borderWidth: 2,
+    borderRadius: 8,
   },
   thumbnail: {
     width: 60,
     height: 60,
-    borderRadius: 4,
+    borderRadius: 6,
   },
   content: {
     padding: 16,
@@ -142,12 +171,15 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 8,
+    color: '#111827',
+    lineHeight: 32,
   },
   price: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#2563eb',
+    color: '#1d4ed8',
     marginBottom: 24,
+    lineHeight: 36,
   },
   specsContainer: {
     flexDirection: 'row',
@@ -164,12 +196,13 @@ const styles = StyleSheet.create({
   },
   specLabel: {
     fontSize: 14,
-    color: '#666',
+    color: '#4b5563',
     marginBottom: 4,
   },
   specValue: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#111827',
   },
   section: {
     marginBottom: 24,
@@ -178,11 +211,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 12,
+    color: '#111827',
   },
   description: {
     fontSize: 16,
     lineHeight: 24,
-    color: '#333',
+    color: '#1f2937',
   },
   featuresList: {
     flexDirection: 'row',
@@ -197,7 +231,7 @@ const styles = StyleSheet.create({
   },
   featureText: {
     fontSize: 14,
-    color: '#333',
+    color: '#1f2937',
   },
   sellerContainer: {
     backgroundColor: 'white',
@@ -208,10 +242,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 4,
+    color: '#111827',
   },
   sellerRating: {
     fontSize: 16,
-    color: '#666',
+    color: '#4b5563',
     marginBottom: 16,
   },
   contactButton: {

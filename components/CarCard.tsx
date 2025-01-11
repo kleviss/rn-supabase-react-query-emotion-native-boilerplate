@@ -51,6 +51,8 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 3,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   image: {
     width: '100%',
@@ -64,12 +66,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 8,
     color: '#1a1a1a',
+    lineHeight: 26,
   },
   price: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#2563eb',
     marginBottom: 12,
+    lineHeight: 46,
   },
   details: {
     flexDirection: 'row',
