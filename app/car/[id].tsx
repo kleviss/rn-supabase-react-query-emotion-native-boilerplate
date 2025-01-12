@@ -1,126 +1,116 @@
 import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-
+import { Stack, useLocalSearchParams } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
+import { MOCK_CARS, type Car } from '@/constants/mock-data';
 
-// Mock data - in a real app, this would come from an API
-const MOCK_CAR = {
-  id: '1',
-  title: 'Mercedes-Benz C-Class 2020',
-  price: 35000,
-  year: 2020,
-  mileage: 45000,
-  location: 'Tirana',
-  transmission: 'Automatic',
-  fuelType: 'Diesel',
-  engineSize: '2.0L',
-  power: '194 hp',
-  description: 'Beautiful Mercedes-Benz C-Class in excellent condition. Full service history, one owner from new. Features include leather seats, panoramic roof, and the latest MBUX infotainment system.',
-  features: [
-    'Leather seats',
-    'Panoramic roof',
-    'Navigation',
-    'Bluetooth',
-    'Parking sensors',
-    'LED headlights',
-  ],
-  images: [
-    'https://images.unsplash.com/photo-1617469767053-d3b523a0b982?w=800',
-    'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800',
-    'https://images.unsplash.com/photo-1485463611174-f302f6a5c1c9?q=80&w=2976&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-  ],
-  seller: {
-    name: 'John Doe',
-    phone: '+355 69 123 4567',
-    rating: 4.8,
-  },
+const trimTitle = (title: string) => {
+  // Get just the make and model, remove the year
+  const [make, model] = title.split(' ').slice(0, 2);
+  return `${make} ${model}`;
 };
 
 export default function CarDetailsScreen() {
   const { id } = useLocalSearchParams();
-  const car = MOCK_CAR; // In real app, fetch car by id
+  // Find the car with matching id from MOCK_CARS
+  const car = MOCK_CARS.find((car) => car.id === id);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
+  if (!car) {
+    return (
+      <ThemedView style={styles.container}>
+        <ThemedText>Car not found</ThemedText>
+      </ThemedView>
+    );
+  }
+
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: car.images[selectedImageIndex] }}
-            style={styles.mainImage}
-            resizeMode="cover"
-          />
-          <View style={styles.thumbnailContainer}>
-            {car.images.map((image, index) => (
-              <Pressable
-                key={index}
-                onPress={() => setSelectedImageIndex(index)}
-                style={[
-                  styles.thumbnailWrapper,
-                  selectedImageIndex === index && styles.selectedThumbnail,
-                ]}>
-                <Image
-                  source={{ uri: image }}
-                  style={styles.thumbnail}
-                  resizeMode="cover"
-                />
-              </Pressable>
-            ))}
-          </View>
-        </View>
-
-        <View style={styles.content}>
-          <ThemedText style={styles.title}>{car.title}</ThemedText>
-          <ThemedText style={styles.price}>€{car.price.toLocaleString()}</ThemedText>
-
-          <View style={styles.specsContainer}>
-            <View style={styles.specItem}>
-              <ThemedText style={styles.specLabel}>Year</ThemedText>
-              <ThemedText style={styles.specValue}>{car.year}</ThemedText>
-            </View>
-            <View style={styles.specItem}>
-              <ThemedText style={styles.specLabel}>Mileage</ThemedText>
-              <ThemedText style={styles.specValue}>{car.mileage.toLocaleString()} km</ThemedText>
-            </View>
-            <View style={styles.specItem}>
-              <ThemedText style={styles.specLabel}>Transmission</ThemedText>
-              <ThemedText style={styles.specValue}>{car.transmission}</ThemedText>
-            </View>
-            <View style={styles.specItem}>
-              <ThemedText style={styles.specLabel}>Fuel Type</ThemedText>
-              <ThemedText style={styles.specValue}>{car.fuelType}</ThemedText>
-            </View>
-          </View>
-
-          <View style={styles.section}>
-            <ThemedText style={styles.sectionTitle}>Description</ThemedText>
-            <ThemedText style={styles.description}>{car.description}</ThemedText>
-          </View>
-
-          <View style={styles.section}>
-            <ThemedText style={styles.sectionTitle}>Features</ThemedText>
-            <View style={styles.featuresList}>
-              {car.features.map((feature, index) => (
-                <View key={index} style={styles.featureItem}>
-                  <ThemedText style={styles.featureText}>✓ {feature}</ThemedText>
-                </View>
+    <>
+      <Stack.Screen
+        options={{
+          title: trimTitle(car.title),
+          headerBackTitle: 'Search',
+        }}
+      />
+      <ThemedView style={styles.container}>
+        <ScrollView style={styles.scrollView}>
+          <View style={styles.imageContainer}>
+            <Image
+              source={{ uri: car.images[selectedImageIndex] }}
+              style={styles.mainImage}
+              resizeMode="cover"
+            />
+            <View style={styles.thumbnailContainer}>
+              {car.images.map((image: string, index: number) => (
+                <Pressable
+                  key={index}
+                  onPress={() => setSelectedImageIndex(index)}
+                  style={[
+                    styles.thumbnailWrapper,
+                    selectedImageIndex === index && styles.selectedThumbnail,
+                  ]}>
+                  <Image
+                    source={{ uri: image }}
+                    style={styles.thumbnail}
+                    resizeMode="cover"
+                  />
+                </Pressable>
               ))}
             </View>
           </View>
 
-          <View style={styles.sellerContainer}>
-            <ThemedText style={styles.sectionTitle}>Seller Information</ThemedText>
-            <ThemedText style={styles.sellerName}>{car.seller.name}</ThemedText>
-            <ThemedText style={styles.sellerRating}>⭐ {car.seller.rating} rating</ThemedText>
-            <Pressable style={styles.contactButton}>
-              <ThemedText style={styles.contactButtonText}>Contact Seller</ThemedText>
-            </Pressable>
+          <View style={styles.content}>
+            <ThemedText style={styles.title}>{car.title}</ThemedText>
+            <ThemedText style={styles.price}>€{car.price.toLocaleString()}</ThemedText>
+
+            <View style={styles.specsContainer}>
+              <View style={styles.specItem}>
+                <ThemedText style={styles.specLabel}>Year</ThemedText>
+                <ThemedText style={styles.specValue}>{car.year}</ThemedText>
+              </View>
+              <View style={styles.specItem}>
+                <ThemedText style={styles.specLabel}>Mileage</ThemedText>
+                <ThemedText style={styles.specValue}>{car.mileage.toLocaleString()} km</ThemedText>
+              </View>
+              <View style={styles.specItem}>
+                <ThemedText style={styles.specLabel}>Transmission</ThemedText>
+                <ThemedText style={styles.specValue}>{car.transmission}</ThemedText>
+              </View>
+              <View style={styles.specItem}>
+                <ThemedText style={styles.specLabel}>Fuel Type</ThemedText>
+                <ThemedText style={styles.specValue}>{car.fuelType}</ThemedText>
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <ThemedText style={styles.sectionTitle}>Description</ThemedText>
+              <ThemedText style={styles.description}>{car.description}</ThemedText>
+            </View>
+
+            <View style={styles.section}>
+              <ThemedText style={styles.sectionTitle}>Features</ThemedText>
+              <View style={styles.featuresList}>
+                {car.features.map((feature: string, index: number) => (
+                  <View key={index} style={styles.featureItem}>
+                    <ThemedText style={styles.featureText}>✓ {feature}</ThemedText>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.sellerContainer}>
+              <ThemedText style={styles.sectionTitle}>Seller Information</ThemedText>
+              <ThemedText style={styles.sellerName}>{car.seller.name}</ThemedText>
+              <ThemedText style={styles.sellerRating}>⭐ {car.seller.rating} rating</ThemedText>
+              <Pressable style={styles.contactButton}>
+                <ThemedText style={styles.contactButtonText}>Contact Seller</ThemedText>
+              </Pressable>
+            </View>
           </View>
-        </View>
-      </ScrollView>
-    </ThemedView>
+        </ScrollView>
+      </ThemedView>
+    </>
   );
 }
 
@@ -178,7 +168,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: '#1d4ed8',
-    marginBottom: 24,
+    marginBottom: 16,
     lineHeight: 36,
   },
   specsContainer: {
@@ -189,6 +179,8 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   specItem: {
     flex: 1,
@@ -228,6 +220,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   featureText: {
     fontSize: 14,
@@ -237,6 +231,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     padding: 16,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   sellerName: {
     fontSize: 18,

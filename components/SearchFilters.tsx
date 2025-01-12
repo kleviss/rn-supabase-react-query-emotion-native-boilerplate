@@ -1,211 +1,314 @@
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { Picker } from '@react-native-picker/picker';
+import BottomSheet from '@gorhom/bottom-sheet';
+import { Car } from '@/constants/mock-data';
 import { ThemedText } from './ThemedText';
-import { useState } from 'react';
+
+const MAKES = ['BMW', 'Mercedes-Benz', 'Audi', 'Volkswagen', 'Toyota', 'Honda'];
+const PRICE_RANGES = [
+  { label: 'Under €5,000', min: 0, max: 5000 },
+  { label: '€5,000 - €10,000', min: 5000, max: 10000 },
+  { label: '€10,000 - €20,000', min: 10000, max: 20000 },
+  { label: '€20,000 - €30,000', min: 20000, max: 30000 },
+  { label: '€30,000 - €50,000', min: 30000, max: 50000 },
+  { label: 'Over €50,000', min: 50000, max: Infinity },
+];
+const YEARS = Array.from({ length: 21 }, (_, i) => 2024 - i);
+const TRANSMISSIONS = ['Any', 'Automatic', 'Manual'];
+
+interface Filters {
+  make?: string;
+  priceRange?: { min: number; max: number; label: string };
+  year?: number;
+  transmission?: string;
+}
 
 interface SearchFiltersProps {
   isVisible: boolean;
   onClose: () => void;
-  onFiltersChange: (filters: SearchFilters) => void;
+  onFiltersChange: (filters: Filters) => void;
+  activeFilters?: Filters;
 }
 
-interface SearchFilters {
-  make: string;
-  model: string;
-  priceRange: string;
-  year: string;
-  transmission: string;
-}
-
-const MAKES = [
-  'Any',
-  'Audi',
-  'BMW',
-  'Mercedes-Benz',
-  'Volkswagen',
-  'Toyota',
-  'Honda',
-];
-
-const PRICE_RANGES = [
-  'Any',
-  '0-5,000',
-  '5,000-10,000',
-  '10,000-20,000',
-  '20,000+',
-];
-
-const YEARS = ['Any', ...Array.from({ length: 30 }, (_, i) => `${new Date().getFullYear() - i}`)];
-const TRANSMISSIONS = ['Any', 'Manual', 'Automatic'];
-
-export function SearchFilters({ isVisible, onClose, onFiltersChange }: SearchFiltersProps) {
-  const [filters, setFilters] = useState<SearchFilters>({
-    make: 'Any',
-    model: 'Any',
-    priceRange: 'Any',
-    year: 'Any',
-    transmission: 'Any',
+export function filterCars(cars: Car[], filters: Filters): Car[] {
+  return cars.filter((car) => {
+    if (filters.make && !car.title.includes(filters.make)) return false;
+    if (filters.priceRange && (car.price < filters.priceRange.min || car.price > filters.priceRange.max)) return false;
+    if (filters.year && car.year !== filters.year) return false;
+    if (filters.transmission && filters.transmission !== 'Any' && car.transmission !== filters.transmission) return false;
+    return true;
   });
+}
 
-  const handleFilterChange = (key: keyof SearchFilters, value: string) => {
-    const newFilters = { ...filters, [key]: value };
-    setFilters(newFilters);
-    onFiltersChange(newFilters);
+export function SearchFilters({ isVisible, onClose, onFiltersChange, activeFilters = {} }: SearchFiltersProps) {
+  const bottomSheetRef = useRef<BottomSheet>(null);
+  const [filters, setFilters] = React.useState<Filters>(activeFilters);
+  const snapPoints = useMemo(() => ['25%', '75%'], []);
+
+  useEffect(() => {
+    if (isVisible) {
+      bottomSheetRef.current?.snapToIndex(0);
+    } else {
+      bottomSheetRef.current?.close();
+    }
+  }, [isVisible]);
+
+  const handleSheetChanges = useCallback((index: number) => {
+    if (index === -1) {
+      onClose();
+    }
+  }, [onClose]);
+
+  const handleMakeSelect = (make: string) => {
+    setFilters(prev => ({ ...prev, make: prev.make === make ? undefined : make }));
   };
 
-  const handleApplyFilters = () => {
+  const handlePriceSelect = (range: typeof PRICE_RANGES[0]) => {
+    setFilters(prev => ({
+      ...prev,
+      priceRange: prev.priceRange?.label === range.label ? undefined : range
+    }));
+  };
+
+  const handleYearSelect = (year: number) => {
+    setFilters(prev => ({ ...prev, year: prev.year === year ? undefined : year }));
+  };
+
+  const handleTransmissionSelect = (transmission: string) => {
+    setFilters(prev => ({
+      ...prev,
+      transmission: prev.transmission === transmission ? undefined : transmission
+    }));
+  };
+
+  const handleApply = () => {
     onFiltersChange(filters);
     onClose();
   };
 
+  const handleClear = () => {
+    setFilters({});
+    onFiltersChange({});
+    onClose();
+  };
+
   return (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={isVisible}
-      onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
-            <ThemedText style={styles.title}>Filters</ThemedText>
-            <Pressable onPress={onClose} style={styles.closeButton}>
-              <ThemedText style={styles.closeButtonText}>✕</ThemedText>
-            </Pressable>
-          </View>
+    <BottomSheet
+      ref={bottomSheetRef}
+      index={-1}
+      snapPoints={snapPoints}
+      onChange={handleSheetChanges}
+      enablePanDownToClose
+      style={styles.bottomSheet}
+    >
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <ThemedText style={styles.title}>Filters</ThemedText>
+          <Pressable onPress={handleClear} style={styles.clearButton}>
+            <ThemedText style={styles.clearButtonText}>Clear All</ThemedText>
+          </Pressable>
+        </View>
 
-          <View style={styles.filterSection}>
-            <ThemedText style={styles.label}>Make</ThemedText>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={filters.make}
-                onValueChange={(value) => handleFilterChange('make', value)}
-                style={styles.picker}
-                itemStyle={styles.pickerItem}>
-                {MAKES.map((make) => (
-                  <Picker.Item key={make} label={make} value={make} />
-                ))}
-              </Picker>
+        <ScrollView style={styles.content}>
+          <View style={styles.section}>
+            <ThemedText style={styles.sectionTitle}>Make</ThemedText>
+            <View style={styles.optionsGrid}>
+              {MAKES.map((make) => (
+                <Pressable
+                  key={make}
+                  style={[
+                    styles.optionButton,
+                    filters.make === make && styles.optionButtonSelected,
+                  ]}
+                  onPress={() => handleMakeSelect(make)}
+                >
+                  <ThemedText
+                    style={[
+                      styles.optionText,
+                      filters.make === make && styles.optionTextSelected,
+                    ]}
+                  >
+                    {make}
+                  </ThemedText>
+                </Pressable>
+              ))}
             </View>
           </View>
 
-          <View style={styles.filterSection}>
-            <ThemedText style={styles.label}>Price Range</ThemedText>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={filters.priceRange}
-                onValueChange={(value) => handleFilterChange('priceRange', value)}
-                style={styles.picker}
-                itemStyle={styles.pickerItem}>
-                {PRICE_RANGES.map((range) => (
-                  <Picker.Item key={range} label={range} value={range} />
-                ))}
-              </Picker>
+          <View style={styles.section}>
+            <ThemedText style={styles.sectionTitle}>Price Range</ThemedText>
+            <View style={styles.optionsGrid}>
+              {PRICE_RANGES.map((range) => (
+                <Pressable
+                  key={range.label}
+                  style={[
+                    styles.optionButton,
+                    filters.priceRange?.label === range.label && styles.optionButtonSelected,
+                  ]}
+                  onPress={() => handlePriceSelect(range)}
+                >
+                  <ThemedText
+                    style={[
+                      styles.optionText,
+                      filters.priceRange?.label === range.label && styles.optionTextSelected,
+                    ]}
+                  >
+                    {range.label}
+                  </ThemedText>
+                </Pressable>
+              ))}
             </View>
           </View>
 
-          <View style={styles.filterSection}>
-            <ThemedText style={styles.label}>Year</ThemedText>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={filters.year}
-                onValueChange={(value) => handleFilterChange('year', value)}
-                style={styles.picker}
-                itemStyle={styles.pickerItem}>
-                {YEARS.map((year) => (
-                  <Picker.Item key={year} label={year} value={year} />
-                ))}
-              </Picker>
+          <View style={styles.section}>
+            <ThemedText style={styles.sectionTitle}>Year</ThemedText>
+            <View style={styles.optionsGrid}>
+              {YEARS.slice(0, 10).map((year) => (
+                <Pressable
+                  key={year}
+                  style={[
+                    styles.optionButton,
+                    filters.year === year && styles.optionButtonSelected,
+                  ]}
+                  onPress={() => handleYearSelect(year)}
+                >
+                  <ThemedText
+                    style={[
+                      styles.optionText,
+                      filters.year === year && styles.optionTextSelected,
+                    ]}
+                  >
+                    {year}
+                  </ThemedText>
+                </Pressable>
+              ))}
             </View>
           </View>
 
-          <View style={styles.filterSection}>
-            <ThemedText style={styles.label}>Transmission</ThemedText>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={filters.transmission}
-                onValueChange={(value) => handleFilterChange('transmission', value)}
-                style={styles.picker}
-                itemStyle={styles.pickerItem}>
-                {TRANSMISSIONS.map((transmission) => (
-                  <Picker.Item key={transmission} label={transmission} value={transmission} />
-                ))}
-              </Picker>
+          <View style={styles.section}>
+            <ThemedText style={styles.sectionTitle}>Transmission</ThemedText>
+            <View style={styles.optionsGrid}>
+              {TRANSMISSIONS.map((transmission) => (
+                <Pressable
+                  key={transmission}
+                  style={[
+                    styles.optionButton,
+                    filters.transmission === transmission && styles.optionButtonSelected,
+                  ]}
+                  onPress={() => handleTransmissionSelect(transmission)}
+                >
+                  <ThemedText
+                    style={[
+                      styles.optionText,
+                      filters.transmission === transmission && styles.optionTextSelected,
+                    ]}
+                  >
+                    {transmission}
+                  </ThemedText>
+                </Pressable>
+              ))}
             </View>
           </View>
+        </ScrollView>
 
-          <Pressable style={styles.applyButton} onPress={handleApplyFilters}>
+        <View style={styles.footer}>
+          <Pressable style={styles.applyButton} onPress={handleApply}>
             <ThemedText style={styles.applyButtonText}>Apply Filters</ThemedText>
           </Pressable>
         </View>
       </View>
-    </Modal>
+    </BottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: 'white',
+  bottomSheet: {
+    backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    padding: 16,
-    maxHeight: '80%',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
-  modalHeader: {
+  container: {
+    flex: 1,
+  },
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
-  },
-  closeButton: {
-    padding: 8,
-  },
-  closeButtonText: {
-    fontSize: 20,
-    color: '#666',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
   title: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#1a1a1a',
   },
-  filterSection: {
-    marginBottom: 16,
+  clearButton: {
+    padding: 8,
   },
-  label: {
+  clearButtonText: {
+    color: '#2563eb',
     fontSize: 16,
-    marginBottom: 8,
-    color: '#666',
   },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
+  content: {
+    flex: 1,
+  },
+  section: {
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  optionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -4,
+  },
+  optionButton: {
+    backgroundColor: '#f3f4f6',
     borderRadius: 8,
-    overflow: 'hidden',
-    backgroundColor: '#f8f9fa',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    margin: 4,
+    minWidth: 80,
   },
-  picker: {
-    height: 50,
-    width: '100%',
-    backgroundColor: 'transparent',
+  optionButtonSelected: {
+    backgroundColor: '#2563eb',
   },
-  pickerItem: {
-    fontSize: 16,
+  optionText: {
+    fontSize: 14,
+    textAlign: 'center',
+    color: '#1f2937',
+  },
+  optionTextSelected: {
+    color: '#fff',
+  },
+  footer: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
   },
   applyButton: {
     backgroundColor: '#2563eb',
-    padding: 16,
     borderRadius: 8,
+    paddingVertical: 12,
     alignItems: 'center',
-    marginTop: 16,
   },
   applyButtonText: {
-    color: 'white',
+    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
