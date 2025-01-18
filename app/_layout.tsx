@@ -12,6 +12,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useEffect } from 'react';
 import { useFonts } from 'expo-font';
+import { getVehicles } from '@/lib/data/vehicles';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -21,9 +22,13 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+  getVehicles().then((vehicles) => {
+    console.log(vehicles);
+  });
 
   useEffect(() => {
     if (loaded) {
+     
       SplashScreen.hideAsync();
     }
   }, [loaded]);
