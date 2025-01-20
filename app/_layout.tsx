@@ -4,15 +4,19 @@ import 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
 
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { Redirect, Stack } from 'expo-router';
 
+import { AuthProvider } from '../context/auth';
 import { Colors } from '@/constants/Colors';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { darkTheme } from '@/constants/theme';
+import { getVehicles } from '@/config/data/vehicles';
+import { lightTheme } from '@/constants/theme';
+import { useAuth } from '../context/auth';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useEffect } from 'react';
 import { useFonts } from 'expo-font';
-import { getVehicles } from '@/lib/data/vehicles';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -22,42 +26,34 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
-  getVehicles().then((vehicles) => {
-    console.log(vehicles);
-  });
+  // getVehicles().then((vehicles) => {
+  //   console.log(vehicles);
+  // });
 
   useEffect(() => {
     if (loaded) {
-     
       SplashScreen.hideAsync();
     }
   }, [loaded]);
 
-  if (!loaded) {
-    return null;
-  }
+  // You can keep any existing theme setup here
+  const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
+
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen
-            name="(tabs)"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="car/[id]"
-            options={{
-              headerTintColor: Colors[colorScheme ?? 'light'].tint,
-              headerStyle: {
-                backgroundColor: '#fff',
-              },
-              presentation: 'card',
-            }}
-          />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    </GestureHandlerRootView>
+    <AuthProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <ThemeProvider value={theme}>
+          <Stack screenOptions={{ headerShown: false }}>
+            {/* Public routes */}
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+
+            {/* Protected routes */}
+            <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+          </Stack>
+          <StatusBar style="auto" />
+        </ThemeProvider>
+      </GestureHandlerRootView>
+    </AuthProvider>
   );
 }

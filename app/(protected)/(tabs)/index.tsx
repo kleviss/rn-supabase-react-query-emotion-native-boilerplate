@@ -7,7 +7,7 @@ import { ThemedView } from '@/components/ThemedView';
 export default function HomeScreen() {
   return (
     <ThemedView style={styles.container}>
-      <ThemedText style={styles.title}>Welcome to Gjej Makine AL</ThemedText>
+      <ThemedText style={styles.title}>Welcome to AutoScout AL</ThemedText>
 
       <View style={styles.linksContainer}>
         <Link href="/search" style={styles.link}>

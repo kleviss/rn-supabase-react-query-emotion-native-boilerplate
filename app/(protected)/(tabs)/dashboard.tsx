@@ -24,6 +24,11 @@ export default function DashboardScreen() {
         <Link href="/help" style={styles.link}>
           <ThemedText style={styles.linkText}>❓ Help Center</ThemedText>
         </Link>
+
+        {/* logout */}
+        <Link href="/logout" style={styles.link}>
+          <ThemedText style={styles.linkText}>🚪 Logout</ThemedText>
+        </Link>
       </View>
     </ThemedView>
   );
