@@ -3,17 +3,14 @@ import 'react-native-gesture-handler';
 
 import * as SplashScreen from 'expo-splash-screen';
 
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Redirect, Stack } from 'expo-router';
-
 import { AuthProvider } from '../context/auth';
-import { Colors } from '@/constants/Colors';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { ThemeProvider } from '@emotion/react'
 import { darkTheme } from '@/constants/theme';
-import { getVehicles } from '@/config/data/vehicles';
+// import { getVehicles } from '@/config/data/vehicles';
 import { lightTheme } from '@/constants/theme';
-import { useAuth } from '../context/auth';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useEffect } from 'react';
 import { useFonts } from 'expo-font';
@@ -43,7 +40,7 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <ThemeProvider value={theme}>
+        <ThemeProvider theme={theme}>
           <Stack screenOptions={{ headerShown: false }}>
             {/* Public routes */}
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
