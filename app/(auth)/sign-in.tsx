@@ -1,15 +1,17 @@
 import { Link, Redirect } from 'expo-router';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
+import { Colors } from '@/constants/Colors';
 import { supabase } from '@/config/supabase';
 import { useState } from 'react';
+import { useTheme } from '@react-navigation/native';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const theme = useTheme();
 
   async function signIn() {
     setLoading(true);
@@ -26,12 +28,12 @@ export default function SignIn() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Sign In</Text>
+      <Text style={[styles.title, { color: theme.colors.text }]}>Sign In</Text>
 
-      {error && <Text style={styles.error}>{error}</Text>}
+      {error && <Text style={[styles.error, { color: theme.colors.text }]}>{error}</Text>}
 
       <TextInput
-        style={styles.input}
+        style={[styles.input, { color: theme.colors.text }]}
         placeholder="Email"
         value={email}
         onChangeText={setEmail}
@@ -39,7 +41,7 @@ export default function SignIn() {
       />
 
       <TextInput
-        style={styles.input}
+        style={[styles.input, { color: theme.colors.text }]}
         placeholder="Password"
         value={password}
         onChangeText={setPassword}
