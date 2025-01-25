@@ -1,14 +1,202 @@
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { SearchFilters, filterCars } from '@/components/SearchFilters';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 
 import { CarCard } from '@/components/CarCard';
+import type { CustomTheme } from '@/constants/theme';
 import { FontAwesome } from '@expo/vector-icons';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { MOCK_CARS } from '@/constants/mock-data';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import styled from '@emotion/native';
+import { useTheme } from '@emotion/react';
+import { FiltersBottomSheet, type FilterOption } from '@/components/ui/FiltersBottomSheet';
+
+const StyledContainer = styled.View(({ theme }) => ({
+  flex: 1,
+  backgroundColor: theme.colors.background,
+}));
+
+const StyledScrollView = styled.ScrollView({
+  flex: 1,
+});
+
+const ScrollContent = styled.View({
+  padding: 16,
+  flexGrow: 1,
+});
+
+const PageHeader = styled.View({
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'flex-start',
+  position: 'relative',
+  zIndex: 1,
+});
+
+const TitleContainer = styled.View({
+  flex: 1,
+  marginRight: 16,
+  position: 'relative',
+});
+
+const Title = styled.Text(({ theme }) => ({
+  fontSize: 24,
+  fontWeight: 'bold',
+  color: theme.colors.text,
+  marginBottom: 0,
+  marginTop: 8,
+}));
+
+const Subtitle = styled.Text(({ theme }) => ({
+  fontSize: 16,
+  color: theme.colors.textSecondary,
+  marginTop: 18,
+  width: '166%',
+}));
+
+const FilterButton = styled.Pressable(({ theme }) => ({
+  backgroundColor: theme.colors.background,
+  borderWidth: 1,
+  borderColor: theme.colors.textSecondary,
+  paddingHorizontal: 16,
+  paddingVertical: 8,
+  borderRadius: 8,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 3,
+  elevation: 3,
+}));
+
+const FilterButtonText = styled.Text(({ theme }) => ({
+  color: theme.colors.text,
+  fontSize: 16,
+  fontWeight: '600',
+}));
+
+const FiltersScroll = styled.ScrollView({
+  marginBottom: 2,
+});
+
+const FilterChip = styled.Pressable(({ theme }) => ({
+  backgroundColor: theme.colors.primary,
+  borderRadius: 20,
+  paddingVertical: 6,
+  paddingLeft: 12,
+  paddingRight: 8,
+  marginRight: 8,
+  flexDirection: 'row',
+  alignItems: 'center',
+}));
+
+const FilterChipText = styled.Text({
+  color: '#fff',
+  fontSize: 14,
+  marginRight: 4,
+});
+
+const ResultsContainer = styled.View({
+  marginTop: 32,
+});
+
+const ResultsTitle = styled.Text(({ theme }) => ({
+  fontSize: 20,
+  fontWeight: 'bold',
+  marginBottom: 16,
+  color: theme.colors.text,
+}));
+
+const NoResults = styled.Text(({ theme }) => ({
+  textAlign: 'center',
+  color: theme.colors.textSecondary,
+  marginTop: 20,
+  fontSize: 16,
+}));
+
+const BottomSheetContent = styled.View({
+  flex: 1,
+  padding: 16,
+});
+
+const Header = styled.View({
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'flex-start',
+  borderBottomWidth: 1,
+  borderBottomColor: '#e5e7eb',
+});
+
+const BottomSheetTitle = styled.Text(({ theme }) => ({
+  fontSize: 20,
+  fontWeight: 'bold',
+  marginBottom: 16,
+  color: theme.colors.text,
+}));
+
+const Section = styled.View({
+  marginBottom: 24,
+});
+
+const SectionTitle = styled.Text(({ theme }) => ({
+  fontSize: 16,
+  fontWeight: '600',
+  color: theme.colors.text,
+  marginBottom: 12,
+}));
+
+const OptionsGrid = styled.View({
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  marginHorizontal: -4,
+});
+
+const OptionButton = styled.Pressable<{ isSelected?: boolean }>(({ theme, isSelected }) => ({
+  backgroundColor: isSelected ? theme.colors.primary : '#f3f4f6',
+  paddingHorizontal: 12,
+  paddingVertical: 8,
+  borderRadius: 8,
+  margin: 4,
+  minWidth: 80,
+  alignItems: 'center',
+}));
+
+const OptionText = styled.Text<{ isSelected?: boolean }>(({ theme, isSelected }) => ({
+  color: isSelected ? '#ffffff' : theme.colors.text,
+  fontSize: 14,
+}));
+
+const Footer = styled.View({
+  paddingTop: 16,
+  borderTopWidth: 1,
+  borderTopColor: '#e5e7eb',
+});
+
+const ClearButton = styled.Pressable({
+  paddingVertical: 0,
+  paddingHorizontal: 12,
+});
+
+const ClearButtonText = styled.Text(({ theme }) => ({
+  color: theme.colors.textSecondary,
+  fontSize: 14,
+}));
+
+const ApplyButton = styled.Pressable(({ theme }) => ({
+  backgroundColor: theme.colors.primary,
+  paddingVertical: 12,
+  borderRadius: 8,
+  alignItems: 'center',
+  width: '100%',
+  paddingHorizontal: 12,
+  marginTop: 4,
+}));
+
+const ApplyButtonText = styled.Text({
+  color: '#ffffff',
+  fontSize: 16,
+  fontWeight: '600',
+  textAlign: 'center',
+});
 
 // Constants for filters
 const MAKES = ['Toyota', 'Honda', 'BMW', 'Mercedes', 'Audi', 'Volkswagen', 'Ford', 'Chevrolet'];
@@ -31,7 +219,8 @@ interface Filters {
 }
 
 export default function SearchScreen() {
-  const [isFiltersVisible, setIsFiltersVisible] = useState(false);
+  const theme = useTheme() as CustomTheme;
+  const [bottomSheetIndex, setBottomSheetIndex] = useState(-1);
   const [activeFilters, setActiveFilters] = useState<Filters>({});
   const [filteredCars, setFilteredCars] = useState(MOCK_CARS);
   const [filters, setFilters] = useState<Filters>({});
@@ -44,13 +233,25 @@ export default function SearchScreen() {
 
   // callbacks
   const handleSheetChanges = useCallback((index: number) => {
-    console.log('handleSheetChanges', index);
-    if (index === -1) {
-      setIsFiltersVisible(false);
-    } else {
-      setIsFiltersVisible(true);
-    }
+    console.log('[SearchScreen] Sheet index changed:', index);
+    setBottomSheetIndex(index);
   }, []);
+
+  const handleOpenFilters = useCallback(() => {
+    console.log('[SearchScreen] Opening filters, current index:', bottomSheetIndex);
+    console.log('[SearchScreen] BottomSheet ref exists:', !!bottomSheetRef.current);
+    setBottomSheetIndex(0);
+  }, [bottomSheetIndex]);
+
+  const handleCloseFilters = useCallback(() => {
+    console.log('[SearchScreen] Closing filters');
+    setBottomSheetIndex(-1);
+  }, []);
+
+  // Effect to log state changes
+  useEffect(() => {
+    console.log('[SearchScreen] Bottom sheet index changed to:', bottomSheetIndex);
+  }, [bottomSheetIndex]);
 
   // renders
   const renderBackdrop = useCallback(
@@ -63,12 +264,6 @@ export default function SearchScreen() {
     ),
     []
   );
-
-  // const handleSheetChanges = useCallback((index: number) => {
-  //   if (index === -1) {
-  //     setIsFiltersVisible(false);
-  //   }
-  // }, []);
 
   // Filter handlers
   const handleMakeSelect = (make: string) => {
@@ -117,449 +312,126 @@ export default function SearchScreen() {
     setFilteredCars(filtered);
   };
 
-  const handleOpenFilters = () => {
-    console.log('Opening filters...');
-    if (bottomSheetRef.current) {
-      console.log('Bottom sheet ref is defined');
-      bottomSheetRef.current.snapToIndex(0);
-    } else {
-      console.log('Bottom sheet ref is NOT defined');
-    }
-  };
+  const filterSections = useMemo(() => [
+    {
+      title: 'Make',
+      options: MAKES.map(make => ({ label: make, value: make })),
+      selectedValue: filters.make,
+      onSelect: (value: string | number) => handleMakeSelect(value as string),
+    },
+    {
+      title: 'Price Range',
+      options: PRICE_RANGES.map(range => ({ label: range.label, value: range.label })),
+      selectedValue: filters.priceRange?.label,
+      onSelect: (value: string | number) => {
+        const range = PRICE_RANGES.find(r => r.label === value);
+        if (range) handlePriceSelect(range);
+      },
+    },
+    {
+      title: 'Year',
+      options: YEARS.slice(0, 10).map(year => ({ label: String(year), value: year })),
+      selectedValue: filters.year,
+      onSelect: (value: string | number) => handleYearSelect(value as number),
+    },
+    {
+      title: 'Transmission',
+      options: TRANSMISSIONS.map(trans => ({ label: trans, value: trans })),
+      selectedValue: filters.transmission,
+      onSelect: (value: string | number) => handleTransmissionSelect(value as string),
+    },
+  ], [filters]);
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { minHeight: '100%' }
-        ]}>
-        <View style={styles.pageHeader}>
-          <View style={styles.titleContainer}>
-            <ThemedText style={styles.title}>Find Your Perfect Car</ThemedText>
-            <ThemedText style={styles.subtitle}>
-              Browse through our extensive collection of quality vehicles and find the perfect one for you.
-            </ThemedText>
-          </View>
-          <View style={styles.filterButtonContainer}>
-            <Pressable
-              style={styles.filterButton}
-              onPress={handleOpenFilters}
-              hitSlop={8}>
-              <ThemedText style={styles.filterButtonText}>🔍 Filters</ThemedText>
-            </Pressable>
-          </View>
-        </View>
+    <StyledContainer>
+      <StyledScrollView
+        contentContainerStyle={{ minHeight: '100%' }}>
+        <ScrollContent>
+          <PageHeader>
+            <TitleContainer>
+              <Title>Find Your Perfect Car</Title>
+              <Subtitle>
+                Browse through our extensive collection of quality vehicles and find the perfect one for you.
+              </Subtitle>
+            </TitleContainer>
+            <View>
+              <FilterButton
+                onPress={() => {
+                  console.log('[SearchScreen] Filter button pressed');
+                  handleOpenFilters();
+                }}
+                hitSlop={8}
+              >
+                <FilterButtonText>🔍 Filters</FilterButtonText>
+              </FilterButton>
+            </View>
+          </PageHeader>
 
-        {Object.keys(activeFilters).length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.filtersScroll}
-            contentContainerStyle={styles.filtersContainer}
-          >
-            {activeFilters.make && (
-              <Pressable
-                style={styles.filterChip}
-                onPress={() => handleRemoveFilter('make')}
-              >
-                <ThemedText style={styles.filterChipText}>{activeFilters.make}</ThemedText>
-                <FontAwesome name="times" size={12} color="#fff" style={styles.filterChipIcon} />
-              </Pressable>
-            )}
-            {activeFilters.priceRange && (
-              <Pressable
-                style={styles.filterChip}
-                onPress={() => handleRemoveFilter('priceRange')}
-              >
-                <ThemedText style={styles.filterChipText}>{activeFilters.priceRange.label}</ThemedText>
-                <FontAwesome name="times" size={12} color="#fff" style={styles.filterChipIcon} />
-              </Pressable>
-            )}
-            {activeFilters.year && (
-              <Pressable
-                style={styles.filterChip}
-                onPress={() => handleRemoveFilter('year')}
-              >
-                <ThemedText style={styles.filterChipText}>{activeFilters.year}</ThemedText>
-                <FontAwesome name="times" size={12} color="#fff" style={styles.filterChipIcon} />
-              </Pressable>
-            )}
-            {activeFilters.transmission && (
-              <Pressable
-                style={styles.filterChip}
-                onPress={() => handleRemoveFilter('transmission')}
-              >
-                <ThemedText style={styles.filterChipText}>{activeFilters.transmission}</ThemedText>
-                <FontAwesome name="times" size={12} color="#fff" style={styles.filterChipIcon} />
-              </Pressable>
-            )}
-          </ScrollView>
-        )}
-
-        <View style={styles.resultsContainer}>
-          <ThemedText style={styles.resultsTitle}>
-            {filteredCars.length === MOCK_CARS.length
-              ? 'Available Cars'
-              : `${filteredCars.length} cars found`}
-          </ThemedText>
-          {filteredCars.map((car) => (
-            <CarCard key={car.id} {...car} />
-          ))}
-          {filteredCars.length === 0 && (
-            <ThemedText style={styles.noResults}>
-              No cars match your filters. Try adjusting your search criteria.
-            </ThemedText>
+          {Object.keys(activeFilters).length > 0 && (
+            <FiltersScroll
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingRight: -16, marginTop: 6 }}
+            >
+              {activeFilters.make && (
+                <FilterChip onPress={() => handleRemoveFilter('make')}>
+                  <FilterChipText>{activeFilters.make}</FilterChipText>
+                  <FontAwesome name="times" size={12} color="#fff" style={{ marginLeft: 4 }} />
+                </FilterChip>
+              )}
+              {activeFilters.priceRange && (
+                <FilterChip onPress={() => handleRemoveFilter('priceRange')}>
+                  <FilterChipText>{activeFilters.priceRange.label}</FilterChipText>
+                  <FontAwesome name="times" size={12} color="#fff" style={{ marginLeft: 4 }} />
+                </FilterChip>
+              )}
+              {activeFilters.year && (
+                <FilterChip onPress={() => handleRemoveFilter('year')}>
+                  <FilterChipText>{activeFilters.year}</FilterChipText>
+                  <FontAwesome name="times" size={12} color="#fff" style={{ marginLeft: 4 }} />
+                </FilterChip>
+              )}
+              {activeFilters.transmission && (
+                <FilterChip onPress={() => handleRemoveFilter('transmission')}>
+                  <FilterChipText>{activeFilters.transmission}</FilterChipText>
+                  <FontAwesome name="times" size={12} color="#fff" style={{ marginLeft: 4 }} />
+                </FilterChip>
+              )}
+            </FiltersScroll>
           )}
-        </View>
-      </ScrollView>
 
-      <BottomSheet
+          <ResultsContainer>
+            <ResultsTitle>
+              {filteredCars.length === MOCK_CARS.length
+                ? 'Available Cars'
+                : `${filteredCars.length} cars found`}
+            </ResultsTitle>
+            {filteredCars.map((car) => (
+              <CarCard key={car.id} {...car} />
+            ))}
+            {filteredCars.length === 0 && (
+              <NoResults>
+                No cars match your filters. Try adjusting your search criteria.
+              </NoResults>
+            )}
+          </ResultsContainer>
+        </ScrollContent>
+      </StyledScrollView>
+
+      <FiltersBottomSheet
         ref={bottomSheetRef}
-        index={-1}
-        snapPoints={snapPoints}
+        sections={filterSections}
+        onApply={() => {
+          console.log('[SearchScreen] Applying filters');
+          handleApply();
+        }}
+        onClose={() => {
+          console.log('[SearchScreen] Bottom sheet closing');
+          handleCloseFilters();
+        }}
+        index={bottomSheetIndex}
         onChange={handleSheetChanges}
-        enablePanDownToClose
-        style={[styles.bottomSheet]}
-        backgroundStyle={{ backgroundColor: '#fff' }}
-        handleIndicatorStyle={{ backgroundColor: '#999' }}
-        animateOnMount={false}
-        backdropComponent={renderBackdrop}
-      >
-        <BottomSheetView style={styles.bottomSheetContainer}>
-          <View style={styles.header}>
-            <ThemedText style={styles.bottomSheetTitle}>Filters</ThemedText>
-            <Pressable onPress={handleClear} style={styles.clearButton}>
-              <ThemedText style={styles.clearButtonText}>Clear All</ThemedText>
-            </Pressable>
-          </View>
-
-          <ScrollView style={styles.bottomSheetContent}>
-            {/* Make Section */}
-            <View style={styles.section}>
-              <ThemedText style={styles.sectionTitle}>Make</ThemedText>
-              <View style={styles.optionsGrid}>
-                {MAKES.map((make) => (
-                  <Pressable
-                    key={make}
-                    style={[
-                      styles.optionButton,
-                      filters.make === make && styles.optionButtonSelected,
-                    ]}
-                    onPress={() => handleMakeSelect(make)}
-                  >
-                    <ThemedText
-                      style={[
-                        styles.optionText,
-                        filters.make === make && styles.optionTextSelected,
-                      ]}
-                    >
-                      {make}
-                    </ThemedText>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-
-            {/* Price Range Section */}
-            <View style={styles.section}>
-              <ThemedText style={styles.sectionTitle}>Price Range</ThemedText>
-              <View style={styles.optionsGrid}>
-                {PRICE_RANGES.map((range) => (
-                  <Pressable
-                    key={range.label}
-                    style={[
-                      styles.optionButton,
-                      filters.priceRange?.label === range.label && styles.optionButtonSelected,
-                    ]}
-                    onPress={() => handlePriceSelect(range)}
-                  >
-                    <ThemedText
-                      style={[
-                        styles.optionText,
-                        filters.priceRange?.label === range.label && styles.optionTextSelected,
-                      ]}
-                    >
-                      {range.label}
-                    </ThemedText>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-
-            {/* Year Section */}
-            <View style={styles.section}>
-              <ThemedText style={styles.sectionTitle}>Year</ThemedText>
-              <View style={styles.optionsGrid}>
-                {YEARS.slice(0, 10).map((year) => (
-                  <Pressable
-                    key={year}
-                    style={[
-                      styles.optionButton,
-                      filters.year === year && styles.optionButtonSelected,
-                    ]}
-                    onPress={() => handleYearSelect(year)}
-                  >
-                    <ThemedText
-                      style={[
-                        styles.optionText,
-                        filters.year === year && styles.optionTextSelected,
-                      ]}
-                    >
-                      {year}
-                    </ThemedText>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-
-            {/* Transmission Section */}
-            <View style={styles.section}>
-              <ThemedText style={styles.sectionTitle}>Transmission</ThemedText>
-              <View style={styles.optionsGrid}>
-                {TRANSMISSIONS.map((transmission) => (
-                  <Pressable
-                    key={transmission}
-                    style={[
-                      styles.optionButton,
-                      filters.transmission === transmission && styles.optionButtonSelected,
-                    ]}
-                    onPress={() => handleTransmissionSelect(transmission)}
-                  >
-                    <ThemedText
-                      style={[
-                        styles.optionText,
-                        filters.transmission === transmission && styles.optionTextSelected,
-                      ]}
-                    >
-                      {transmission}
-                    </ThemedText>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-          </ScrollView>
-
-          <View style={styles.footer}>
-            <Pressable style={styles.applyButton} onPress={handleApply}>
-              <ThemedText style={styles.applyButtonText}>Apply Filters</ThemedText>
-            </Pressable>
-          </View>
-        </BottomSheetView>
-      </BottomSheet>
-    </ThemedView>
+      />
+    </StyledContainer>
   );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-    flexGrow: 1,
-  },
-  bottomSheetWrapper: {
-    position: 'relative',
-    backgroundColor: 'red',
-  },
-  bcontainer: {
-    flex: 1,
-    backgroundColor: 'transparent',
-    padding: 24,
-  },
-  contentContainer: {
-    flex: 1,
-    padding: 36,
-    alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    // marginBottom: 8,
-    position: 'relative',
-    zIndex: 1,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  pageHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    // marginBottom: 8,
-    position: 'relative',
-    zIndex: 1,
-    // borderBottomWidth: 1,
-    // borderBottomColor: '#e5e7eb',
-  },
-  titleContainer: {
-    flex: 1,
-    marginRight: 16,
-    position: 'relative',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
-    marginBottom: 0,
-    marginTop: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 18,
-    width: '166%',
-  },
-  filterButtonContainer: {
-    zIndex: 2,
-  },
-  filterButton: {
-    backgroundColor: '#2563eb',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  filterButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  filtersScroll: {
-    marginBottom: 2,
-  },
-  filtersContainer: {
-    paddingRight: -16,
-    marginTop: 6,
-  },
-  filterChip: {
-    backgroundColor: '#2563eb',
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingLeft: 12,
-    paddingRight: 8,
-    marginRight: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  filterChipText: {
-    color: '#fff',
-    fontSize: 14,
-    marginRight: 4,
-  },
-  filterChipIcon: {
-    marginLeft: 4,
-  },
-  resultsContainer: {
-    marginTop: 32,
-  },
-  resultsTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#1a1a1a',
-  },
-  noResults: {
-    textAlign: 'center',
-    color: '#666',
-    marginTop: 20,
-    fontSize: 16,
-  },
-  // Bottom sheet styles
-  bottomSheet: {
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: -4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  bottomSheetContainer: {
-    flex: 1,
-    padding: 16,
-  },
-  bottomSheetTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  bottomSheetContent: {
-    flex: 1,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  optionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginHorizontal: -4,
-  },
-  optionButton: {
-    backgroundColor: '#f3f4f6',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    margin: 4,
-    minWidth: 80,
-    alignItems: 'center',
-  },
-  optionButtonSelected: {
-    backgroundColor: '#2563eb',
-  },
-  optionText: {
-    color: '#1f2937',
-    fontSize: 14,
-  },
-  optionTextSelected: {
-    color: '#ffffff',
-  },
-  footer: {
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-  },
-  clearButton: {
-    paddingVertical: 0,
-    paddingHorizontal: 12,
-  },
-  clearButtonText: {
-    color: '#6b7280',
-    fontSize: 14,
-  },
-  applyButton: {
-    backgroundColor: '#2563eb',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    width: '100%',
-    paddingHorizontal: 12,
-    marginTop: 4,
-  },
-  applyButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
-    // zIndex: 10,
-  },
-}); 
+} 
