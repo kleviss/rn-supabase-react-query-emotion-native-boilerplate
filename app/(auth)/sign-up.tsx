@@ -1,7 +1,6 @@
-import { Image, View } from 'react-native';
-
 import type { CustomTheme } from '@/constants/theme';
 import { Link } from 'expo-router';
+import { View } from 'react-native';
 import styled from '@emotion/native';
 import { supabase } from '@/config/supabase';
 import { useState } from 'react';
@@ -14,17 +13,17 @@ const StyledContainer = styled.View(({ theme }) => ({
   backgroundColor: theme.colors.background,
 }));
 
-const StyledText = styled.Text(({ variant, theme, isHeading = false }: { variant?: 'error' | 'success', theme: CustomTheme, isHeading?: boolean }) => ({
-  fontSize: isHeading ? 24 : 14,
+
+const StyledText = styled.Text<{ isHeading?: boolean; variant?: 'error' | 'success' }>(props => ({
+  fontSize: props.isHeading ? 24 : 14,
   fontWeight: 'bold',
-  marginBottom: isHeading ? 20 : 0,
+  marginBottom: props.isHeading ? 20 : 0,
   textAlign: 'center',
-  color: variant === 'error'
-    ? theme.colors.textError
-    : variant === 'success'
-      ? theme.colors.textSuccess
-      : isHeading ? theme.colors.text : theme.colors.textContrast,
+  color: props.variant === 'error' ? props.theme.colors.textError :
+    props.variant === 'success' ? props.theme.colors.textSuccess :
+      props.isHeading ? props.theme.colors.text : props.theme.colors.textContrast,
 }));
+
 
 const StyledInput = styled.TextInput(({ theme }) => ({
   borderWidth: 1,
@@ -48,12 +47,19 @@ const StyledLink = styled(Link)(({ theme }) => ({
   color: theme.colors.primary,
 }));
 
+const StyledImage = styled.Image`
+  width: 100px;
+  height: 100px;
+  align-self: center;
+`;
+
 export default function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const theme = useTheme() as CustomTheme;
+  const logoImage = require('../../assets/images/logo.png');
 
   async function signUp() {
     setLoading(true);
@@ -75,12 +81,8 @@ export default function SignUp() {
 
   return (
     <StyledContainer>
-      <Image
-        source={require('../../assets/images/logo.png')}
-        style={{ width: 100, height: 100, alignSelf: 'center' }}
-      />
-      <StyledText theme={theme} isHeading={true}>Create Account</StyledText>
-
+      <StyledImage source={logoImage} />
+      <StyledText isHeading={true}>Create Account</StyledText>
       {error && (
         <View style={{ marginBottom: 15 }}>
           <StyledText
