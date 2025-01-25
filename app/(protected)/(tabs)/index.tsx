@@ -3,11 +3,13 @@ import { StyleSheet, View } from 'react-native';
 import { Link } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { useTheme } from '@react-navigation/native';
 
 export default function HomeScreen() {
+  const theme = useTheme();
   return (
     <ThemedView style={styles.container}>
-      <ThemedText style={styles.title}>Welcome to Gjej Makine AL</ThemedText>
+      <ThemedText style={[styles.title, { color: theme.colors.text }]}>Welcome to AutoScout AL</ThemedText>
 
       <View style={styles.linksContainer}>
         <Link href="/search" style={styles.link}>
@@ -35,7 +37,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#f8f9fa',
+    // backgroundColor: '#f8f9fa',
   },
   title: {
     fontSize: 28,

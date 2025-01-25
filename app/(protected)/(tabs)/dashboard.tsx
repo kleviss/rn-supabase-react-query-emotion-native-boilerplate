@@ -1,8 +1,10 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
+import { Colors } from '@/constants/Colors';
 import { Link } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { supabase } from '@/config/supabase';
 
 export default function DashboardScreen() {
   return (
@@ -24,6 +26,12 @@ export default function DashboardScreen() {
         <Link href="/help" style={styles.link}>
           <ThemedText style={styles.linkText}>❓ Help Center</ThemedText>
         </Link>
+
+        {/* logout */}
+        {/* <Link href="/logout" style={styles.link}> */}
+        <TouchableOpacity style={styles.link} onPress={() => supabase.auth.signOut()}>
+          <ThemedText style={styles.linkText}>🚪 Logout</ThemedText>
+        </TouchableOpacity>
       </View>
     </ThemedView>
   );
