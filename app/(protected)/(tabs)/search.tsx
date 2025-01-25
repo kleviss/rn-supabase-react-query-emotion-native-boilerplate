@@ -1,8 +1,8 @@
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
-import { Pressable, ScrollView, View } from 'react-native';
-import { SearchFilters, filterCars } from '@/components/SearchFilters';
+import { View } from 'react-native';
+import { filterCars } from '@/components/SearchFilters';
 import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
-
+import { useVehicles } from '@/services/supabase.api';
 import { CarCard } from '@/components/CarCard';
 import type { CustomTheme } from '@/constants/theme';
 import { FontAwesome } from '@expo/vector-icons';
@@ -113,90 +113,6 @@ const NoResults = styled.Text(({ theme }) => ({
   fontSize: 16,
 }));
 
-const BottomSheetContent = styled.View({
-  flex: 1,
-  padding: 16,
-});
-
-const Header = styled.View({
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'flex-start',
-  borderBottomWidth: 1,
-  borderBottomColor: '#e5e7eb',
-});
-
-const BottomSheetTitle = styled.Text(({ theme }) => ({
-  fontSize: 20,
-  fontWeight: 'bold',
-  marginBottom: 16,
-  color: theme.colors.text,
-}));
-
-const Section = styled.View({
-  marginBottom: 24,
-});
-
-const SectionTitle = styled.Text(({ theme }) => ({
-  fontSize: 16,
-  fontWeight: '600',
-  color: theme.colors.text,
-  marginBottom: 12,
-}));
-
-const OptionsGrid = styled.View({
-  flexDirection: 'row',
-  flexWrap: 'wrap',
-  marginHorizontal: -4,
-});
-
-const OptionButton = styled.Pressable<{ isSelected?: boolean }>(({ theme, isSelected }) => ({
-  backgroundColor: isSelected ? theme.colors.primary : '#f3f4f6',
-  paddingHorizontal: 12,
-  paddingVertical: 8,
-  borderRadius: 8,
-  margin: 4,
-  minWidth: 80,
-  alignItems: 'center',
-}));
-
-const OptionText = styled.Text<{ isSelected?: boolean }>(({ theme, isSelected }) => ({
-  color: isSelected ? '#ffffff' : theme.colors.text,
-  fontSize: 14,
-}));
-
-const Footer = styled.View({
-  paddingTop: 16,
-  borderTopWidth: 1,
-  borderTopColor: '#e5e7eb',
-});
-
-const ClearButton = styled.Pressable({
-  paddingVertical: 0,
-  paddingHorizontal: 12,
-});
-
-const ClearButtonText = styled.Text(({ theme }) => ({
-  color: theme.colors.textSecondary,
-  fontSize: 14,
-}));
-
-const ApplyButton = styled.Pressable(({ theme }) => ({
-  backgroundColor: theme.colors.primary,
-  paddingVertical: 12,
-  borderRadius: 8,
-  alignItems: 'center',
-  width: '100%',
-  paddingHorizontal: 12,
-  marginTop: 4,
-}));
-
-const ApplyButtonText = styled.Text({
-  color: '#ffffff',
-  fontSize: 16,
-  fontWeight: '600',
-  textAlign: 'center',
-});
 
 // Constants for filters
 const MAKES = ['Toyota', 'Honda', 'BMW', 'Mercedes', 'Audi', 'Volkswagen', 'Ford', 'Chevrolet'];
@@ -224,6 +140,12 @@ export default function SearchScreen() {
   const [activeFilters, setActiveFilters] = useState<Filters>({});
   const [filteredCars, setFilteredCars] = useState(MOCK_CARS);
   const [filters, setFilters] = useState<Filters>({});
+
+  // Data Fetching
+  const { data: vehicles, isLoading, error } = useVehicles();
+
+  // Debugging react query (TODO: use the data later after Database is seeded)
+  console.log({ vehicles, isLoading, error });
 
   // ref
   const bottomSheetRef = useRef<BottomSheet>(null);
