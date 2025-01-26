@@ -7,6 +7,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { AuthProvider } from '../context/auth';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -59,14 +60,15 @@ export default function RootLayout() {
       <AuthProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <ThemeProvider theme={theme}>
-            <Stack screenOptions={{ headerShown: false }}>
-              {/* Public routes */}
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-
-              {/* Protected routes */}
-              <Stack.Screen name="(protected)" options={{ headerShown: false }} />
-            </Stack>
-            <StatusBar style="auto" />
+            <BottomSheetModalProvider>
+              <Stack screenOptions={{ headerShown: false }}>
+                {/* Public routes */}
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                {/* Protected routes */}
+                <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+              </Stack>
+              <StatusBar style="auto" />
+            </BottomSheetModalProvider>
           </ThemeProvider>
         </GestureHandlerRootView>
       </AuthProvider>
