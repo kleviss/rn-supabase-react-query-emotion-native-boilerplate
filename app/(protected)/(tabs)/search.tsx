@@ -145,7 +145,7 @@ export default function SearchScreen() {
   const { data: vehicles, isLoading, error } = useVehicles();
 
   // Debugging react query (TODO: use the data later after Database is seeded)
-  console.log({ vehicles, isLoading, error });
+  console.log('React Query Data:', { vehicles, isLoading, error });
 
   // ref
   const bottomSheetRef = useRef<BottomSheet>(null);
