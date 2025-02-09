@@ -1,7 +1,7 @@
-import { BottomSheet } from './BottomSheet';
-import BottomSheetBase from '@gorhom/bottom-sheet';
-import type { CustomTheme } from '@/constants/theme';
-import { ScrollView } from 'react-native';
+import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { ScrollView, View } from 'react-native';
+
+import { StyleSheet } from 'react-native';
 import { forwardRef } from 'react';
 import styled from '@emotion/native';
 
@@ -44,7 +44,10 @@ const Footer = styled.View({
   paddingTop: 16,
   borderTopWidth: 1,
   borderTopColor: '#e5e7eb',
+  // paddingHorizontal: 16,
+  paddingBottom: 56,
 });
+
 
 const ApplyButton = styled.Pressable(({ theme }) => ({
   backgroundColor: theme.colors.primary,
@@ -77,36 +80,14 @@ export interface FiltersBottomSheetProps {
   }[];
   onApply: () => void;
   onClose: () => void;
-  index?: number;
-  onChange?: (index: number) => void;
 }
 
-export const FiltersBottomSheet = forwardRef<BottomSheetBase, FiltersBottomSheetProps>(
-  ({ sections, onApply, onClose, index = -1, onChange }, ref) => {
-    console.log('[FiltersBottomSheet] Rendering with props:', {
-      sectionsCount: sections.length,
-      index,
-      hasOnChange: !!onChange,
-      hasOnClose: !!onClose,
-      hasOnApply: !!onApply,
-      hasRef: !!ref
-    });
+const FiltersBottomSheet = forwardRef<BottomSheetModal, FiltersBottomSheetProps>(
+  ({ sections, onApply, onClose }, ref) => {
+
 
     return (
-      <BottomSheet
-        ref={ref}
-        title="Filters"
-        onClose={() => {
-          console.log('[FiltersBottomSheet] Close button clicked');
-          onClose();
-        }}
-        isFullScreen
-        index={index}
-        onChange={(newIndex) => {
-          console.log('[FiltersBottomSheet] Sheet index changed to:', newIndex);
-          onChange?.(newIndex);
-        }}
-      >
+      <BottomSheetView style={styles.contentContainer}>
         <ScrollView>
           {sections.map((section, index) => (
             <Section key={index}>
@@ -133,7 +114,18 @@ export const FiltersBottomSheet = forwardRef<BottomSheetBase, FiltersBottomSheet
             <ApplyButtonText>Apply Filters</ApplyButtonText>
           </ApplyButton>
         </Footer>
-      </BottomSheet>
+        <View style={{ height: 130 }} />
+      </BottomSheetView>
     );
   }
-); 
+);
+
+const styles = StyleSheet.create({
+  contentContainer: {
+    padding: 16,
+    flex: 1,
+  },
+});
+
+
+export default FiltersBottomSheet;

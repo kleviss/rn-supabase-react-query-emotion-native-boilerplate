@@ -59,11 +59,12 @@ export default function SignIn() {
   const logoImage = require('../../assets/images/logo.png');
 
   async function signIn() {
+
     setLoading(true);
     setError(null);
 
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-
+    console.log('error', error);
     if (error) {
       setError(error.message);
     }
@@ -109,6 +110,10 @@ export default function SignIn() {
 
       <StyledLink href="/sign-up">
         Don't have an account? Sign Up
+      </StyledLink>
+      {/* go back to home screen */}
+      <StyledLink href="/(public)" style={{ marginTop: 10 }}>
+        {"⏮️ Go Back"}
       </StyledLink>
     </StyledContainer >
   );

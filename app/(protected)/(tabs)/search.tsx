@@ -1,15 +1,19 @@
-import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
-import { Pressable, ScrollView, View } from 'react-native';
-import { SearchFilters, filterCars } from '@/components/SearchFilters';
-import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
+import { ActivityIndicator, Button, RefreshControl, Text, View } from 'react-native';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetBackdropProps, BottomSheetFlatList, BottomSheetModal, BottomSheetModalProvider, BottomSheetView } from '@gorhom/bottom-sheet';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { CarCard } from '@/components/CarCard';
 import type { CustomTheme } from '@/constants/theme';
+import FiltersBottomSheet from '@/components/ui/FiltersBottomSheet';
+import { FlashList } from '@shopify/flash-list';
 import { FontAwesome } from '@expo/vector-icons';
 import { MOCK_CARS } from '@/constants/mock-data';
+import { SearchPageHeader } from '@/components/ui/SearchPageHeader';
+import { StyleSheet } from 'react-native';
+import { filterCars } from '@/components/SearchFilters';
 import styled from '@emotion/native';
 import { useTheme } from '@emotion/react';
-import { FiltersBottomSheet, type FilterOption } from '@/components/ui/FiltersBottomSheet';
+import { useVehicles } from '@/services/supabase.api';
 
 const StyledContainer = styled.View(({ theme }) => ({
   flex: 1,
@@ -25,178 +29,12 @@ const ScrollContent = styled.View({
   flexGrow: 1,
 });
 
-const PageHeader = styled.View({
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'flex-start',
-  position: 'relative',
-  zIndex: 1,
-});
-
-const TitleContainer = styled.View({
-  flex: 1,
-  marginRight: 16,
-  position: 'relative',
-});
-
-const Title = styled.Text(({ theme }) => ({
-  fontSize: 24,
-  fontWeight: 'bold',
-  color: theme.colors.text,
-  marginBottom: 0,
-  marginTop: 8,
-}));
-
-const Subtitle = styled.Text(({ theme }) => ({
-  fontSize: 16,
-  color: theme.colors.textSecondary,
-  marginTop: 18,
-  width: '166%',
-}));
-
-const FilterButton = styled.Pressable(({ theme }) => ({
-  backgroundColor: theme.colors.background,
-  borderWidth: 1,
-  borderColor: theme.colors.textSecondary,
-  paddingHorizontal: 16,
-  paddingVertical: 8,
-  borderRadius: 8,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.1,
-  shadowRadius: 3,
-  elevation: 3,
-}));
-
-const FilterButtonText = styled.Text(({ theme }) => ({
-  color: theme.colors.text,
-  fontSize: 16,
-  fontWeight: '600',
-}));
-
-const FiltersScroll = styled.ScrollView({
-  marginBottom: 2,
-});
-
-const FilterChip = styled.Pressable(({ theme }) => ({
-  backgroundColor: theme.colors.primary,
-  borderRadius: 20,
-  paddingVertical: 6,
-  paddingLeft: 12,
-  paddingRight: 8,
-  marginRight: 8,
-  flexDirection: 'row',
-  alignItems: 'center',
-}));
-
-const FilterChipText = styled.Text({
-  color: '#fff',
-  fontSize: 14,
-  marginRight: 4,
-});
-
-const ResultsContainer = styled.View({
-  marginTop: 32,
-});
-
-const ResultsTitle = styled.Text(({ theme }) => ({
-  fontSize: 20,
-  fontWeight: 'bold',
-  marginBottom: 16,
-  color: theme.colors.text,
-}));
-
 const NoResults = styled.Text(({ theme }) => ({
   textAlign: 'center',
   color: theme.colors.textSecondary,
   marginTop: 20,
   fontSize: 16,
 }));
-
-const BottomSheetContent = styled.View({
-  flex: 1,
-  padding: 16,
-});
-
-const Header = styled.View({
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'flex-start',
-  borderBottomWidth: 1,
-  borderBottomColor: '#e5e7eb',
-});
-
-const BottomSheetTitle = styled.Text(({ theme }) => ({
-  fontSize: 20,
-  fontWeight: 'bold',
-  marginBottom: 16,
-  color: theme.colors.text,
-}));
-
-const Section = styled.View({
-  marginBottom: 24,
-});
-
-const SectionTitle = styled.Text(({ theme }) => ({
-  fontSize: 16,
-  fontWeight: '600',
-  color: theme.colors.text,
-  marginBottom: 12,
-}));
-
-const OptionsGrid = styled.View({
-  flexDirection: 'row',
-  flexWrap: 'wrap',
-  marginHorizontal: -4,
-});
-
-const OptionButton = styled.Pressable<{ isSelected?: boolean }>(({ theme, isSelected }) => ({
-  backgroundColor: isSelected ? theme.colors.primary : '#f3f4f6',
-  paddingHorizontal: 12,
-  paddingVertical: 8,
-  borderRadius: 8,
-  margin: 4,
-  minWidth: 80,
-  alignItems: 'center',
-}));
-
-const OptionText = styled.Text<{ isSelected?: boolean }>(({ theme, isSelected }) => ({
-  color: isSelected ? '#ffffff' : theme.colors.text,
-  fontSize: 14,
-}));
-
-const Footer = styled.View({
-  paddingTop: 16,
-  borderTopWidth: 1,
-  borderTopColor: '#e5e7eb',
-});
-
-const ClearButton = styled.Pressable({
-  paddingVertical: 0,
-  paddingHorizontal: 12,
-});
-
-const ClearButtonText = styled.Text(({ theme }) => ({
-  color: theme.colors.textSecondary,
-  fontSize: 14,
-}));
-
-const ApplyButton = styled.Pressable(({ theme }) => ({
-  backgroundColor: theme.colors.primary,
-  paddingVertical: 12,
-  borderRadius: 8,
-  alignItems: 'center',
-  width: '100%',
-  paddingHorizontal: 12,
-  marginTop: 4,
-}));
-
-const ApplyButtonText = styled.Text({
-  color: '#ffffff',
-  fontSize: 16,
-  fontWeight: '600',
-  textAlign: 'center',
-});
 
 // Constants for filters
 const MAKES = ['Toyota', 'Honda', 'BMW', 'Mercedes', 'Audi', 'Volkswagen', 'Ford', 'Chevrolet'];
@@ -218,53 +56,28 @@ interface Filters {
   transmission?: string;
 }
 
-export default function SearchScreen() {
+const SearchScreen = () => {
   const theme = useTheme() as CustomTheme;
-  const [bottomSheetIndex, setBottomSheetIndex] = useState(-1);
   const [activeFilters, setActiveFilters] = useState<Filters>({});
   const [filteredCars, setFilteredCars] = useState(MOCK_CARS);
   const [filters, setFilters] = useState<Filters>({});
 
+  // Data Fetching
+  const { data: vehicles, isLoading, error, refetch } = useVehicles();
+
   // ref
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
   // variables
-  const snapPoints = useMemo(() => ["25%", "50%", "75%"], []);
+  const snapPoints = useMemo(() => ["100%"], []);
 
-  // callbacks
-  const handleSheetChanges = useCallback((index: number) => {
-    console.log('[SearchScreen] Sheet index changed:', index);
-    setBottomSheetIndex(index);
+  const handlePresentModalPress = useCallback(() => {
+    bottomSheetModalRef.current?.present();
   }, []);
-
-  const handleOpenFilters = useCallback(() => {
-    console.log('[SearchScreen] Opening filters, current index:', bottomSheetIndex);
-    console.log('[SearchScreen] BottomSheet ref exists:', !!bottomSheetRef.current);
-    setBottomSheetIndex(0);
-  }, [bottomSheetIndex]);
 
   const handleCloseFilters = useCallback(() => {
-    console.log('[SearchScreen] Closing filters');
-    setBottomSheetIndex(-1);
+    bottomSheetModalRef.current?.dismiss();
   }, []);
-
-  // Effect to log state changes
-  useEffect(() => {
-    console.log('[SearchScreen] Bottom sheet index changed to:', bottomSheetIndex);
-  }, [bottomSheetIndex]);
-
-  // renders
-  const renderBackdrop = useCallback(
-    (props: any) => (
-      <BottomSheetBackdrop
-        {...props}
-        disappearsOnIndex={-1}
-        appearsOnIndex={0}
-      />
-    ),
-    []
-  );
-
   // Filter handlers
   const handleMakeSelect = (make: string) => {
     setFilters(prev => ({ ...prev, make: prev.make === make ? undefined : make }));
@@ -289,20 +102,14 @@ export default function SearchScreen() {
   };
 
   const handleApply = () => {
-    console.log('Applying filters:', filters);
     setActiveFilters(filters);
     const filtered = filterCars(MOCK_CARS, filters);
     setFilteredCars(filtered);
-    bottomSheetRef.current?.close();
+    bottomSheetModalRef.current?.close();
+    handleCloseFilters();
   };
 
-  const handleClear = () => {
-    console.log('Clearing filters');
-    setFilters({});
-    setActiveFilters({});
-    setFilteredCars(MOCK_CARS);
-    bottomSheetRef.current?.close();
-  };
+
 
   const handleRemoveFilter = (key: keyof Filters) => {
     const newFilters = { ...activeFilters };
@@ -342,96 +149,88 @@ export default function SearchScreen() {
     },
   ], [filters]);
 
+  const emptyText = 'No cars match your filters. Try adjusting your search criteria.';
+
+  // renders
+  const renderBackdrop = useCallback(
+    (props_: BottomSheetBackdropProps) => (
+      <BottomSheetBackdrop
+        {...props_}
+        pressBehavior="close"
+        opacity={0.5}
+        disappearsOnIndex={-1}
+      />
+    ),
+    []
+  );
+
+  const handleRefresh = useCallback(() => {
+    refetch();
+  }, []);
+
   return (
     <StyledContainer>
       <StyledScrollView
-        contentContainerStyle={{ minHeight: '100%' }}>
+        contentContainerStyle={{ minHeight: '100%' }}
+        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />}>
         <ScrollContent>
-          <PageHeader>
-            <TitleContainer>
-              <Title>Find Your Perfect Car</Title>
-              <Subtitle>
-                Browse through our extensive collection of quality vehicles and find the perfect one for you.
-              </Subtitle>
-            </TitleContainer>
-            <View>
-              <FilterButton
-                onPress={() => {
-                  console.log('[SearchScreen] Filter button pressed');
-                  handleOpenFilters();
-                }}
-                hitSlop={8}
-              >
-                <FilterButtonText>🔍 Filters</FilterButtonText>
-              </FilterButton>
+          {isLoading ? (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+              <ActivityIndicator size="large" color={theme.colors.primary} />
             </View>
-          </PageHeader>
-
-          {Object.keys(activeFilters).length > 0 && (
-            <FiltersScroll
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingRight: -16, marginTop: 6 }}
-            >
-              {activeFilters.make && (
-                <FilterChip onPress={() => handleRemoveFilter('make')}>
-                  <FilterChipText>{activeFilters.make}</FilterChipText>
-                  <FontAwesome name="times" size={12} color="#fff" style={{ marginLeft: 4 }} />
-                </FilterChip>
-              )}
-              {activeFilters.priceRange && (
-                <FilterChip onPress={() => handleRemoveFilter('priceRange')}>
-                  <FilterChipText>{activeFilters.priceRange.label}</FilterChipText>
-                  <FontAwesome name="times" size={12} color="#fff" style={{ marginLeft: 4 }} />
-                </FilterChip>
-              )}
-              {activeFilters.year && (
-                <FilterChip onPress={() => handleRemoveFilter('year')}>
-                  <FilterChipText>{activeFilters.year}</FilterChipText>
-                  <FontAwesome name="times" size={12} color="#fff" style={{ marginLeft: 4 }} />
-                </FilterChip>
-              )}
-              {activeFilters.transmission && (
-                <FilterChip onPress={() => handleRemoveFilter('transmission')}>
-                  <FilterChipText>{activeFilters.transmission}</FilterChipText>
-                  <FontAwesome name="times" size={12} color="#fff" style={{ marginLeft: 4 }} />
-                </FilterChip>
-              )}
-            </FiltersScroll>
+          ) : (
+            <FlashList
+              data={filteredCars}
+              renderItem={({ item }) => <CarCard key={item.id} {...item} />}
+              estimatedItemSize={200}
+              refreshing={isLoading}
+              onRefresh={handleRefresh}
+              ListEmptyComponent={<NoResults>{emptyText}</NoResults>}
+              ListHeaderComponent={
+                <SearchPageHeader
+                  activeFilters={activeFilters}
+                  onOpenFilters={handlePresentModalPress}
+                  onRemoveFilter={handleRemoveFilter}
+                />
+              }
+            />
           )}
-
-          <ResultsContainer>
-            <ResultsTitle>
-              {filteredCars.length === MOCK_CARS.length
-                ? 'Available Cars'
-                : `${filteredCars.length} cars found`}
-            </ResultsTitle>
-            {filteredCars.map((car) => (
-              <CarCard key={car.id} {...car} />
-            ))}
-            {filteredCars.length === 0 && (
-              <NoResults>
-                No cars match your filters. Try adjusting your search criteria.
-              </NoResults>
-            )}
-          </ResultsContainer>
         </ScrollContent>
       </StyledScrollView>
-
-      <FiltersBottomSheet
-        ref={bottomSheetRef}
-        sections={filterSections}
-        onApply={() => {
-          console.log('[SearchScreen] Applying filters');
-          handleApply();
-        }}
-        onClose={() => {
-          console.log('[SearchScreen] Bottom sheet closing');
-          handleCloseFilters();
-        }}
-        index={bottomSheetIndex}
-        onChange={handleSheetChanges}
-      />
+      <BottomSheetModal
+        ref={bottomSheetModalRef}
+        snapPoints={["80%"]}
+        backdropComponent={renderBackdrop}
+        enablePanDownToClose
+      >
+        <FiltersBottomSheet
+          sections={filterSections}
+          onApply={() => {
+            handleApply();
+            handleCloseFilters();
+          }}
+          onClose={handleCloseFilters}
+        />
+      </BottomSheetModal>
     </StyledContainer>
   );
-} 
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  contentContainer: {
+    backgroundColor: "white",
+    // flex: 1,
+    padding: 16,
+    // minHeight: 500,
+  },
+  itemContainer: {
+    padding: 6,
+    margin: 6,
+    backgroundColor: "#eee",
+  },
+});
+
+export default SearchScreen;

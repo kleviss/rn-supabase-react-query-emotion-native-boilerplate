@@ -1,19 +1,37 @@
 import 'react-native-reanimated';
 import 'react-native-gesture-handler';
 
+import * as Network from 'expo-network'
 import * as SplashScreen from 'expo-splash-screen';
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
 import { AuthProvider } from '../context/auth';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider } from '@emotion/react'
 import { darkTheme } from '@/constants/theme';
-// import { getVehicles } from '@/config/data/vehicles';
 import { lightTheme } from '@/constants/theme';
+import { onlineManager } from '@tanstack/react-query'
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useEffect } from 'react';
 import { useFonts } from 'expo-font';
+// React Query Dev Tools
+import { useReactQueryDevTools } from '@dev-plugins/react-query';
+
+// React Query Client
+const queryClient = new QueryClient()
+
+// React Query Online Manager - Checks if the device is online to refetch queries
+onlineManager.setEventListener((setOnline) => {
+  const subscription = Network.addNetworkStateListener((state) => {
+    setOnline(state.isConnected || false)
+  })
+  return () => subscription.remove()
+})
+
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -23,9 +41,9 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
-  // getVehicles().then((vehicles) => {
-  //   console.log(vehicles);
-  // });
+
+  // Integrate react-query with the DevTool hook
+  useReactQueryDevTools(queryClient);
 
   useEffect(() => {
     if (loaded) {
@@ -38,19 +56,26 @@ export default function RootLayout() {
 
 
   return (
-    <AuthProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <ThemeProvider theme={theme}>
-          <Stack screenOptions={{ headerShown: false }}>
-            {/* Public routes */}
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <ThemeProvider theme={theme}>
+            <BottomSheetModalProvider>
+              <Stack screenOptions={{ headerShown: false }}>
+                {/* Public routes (non-authenticated) */}
+                <Stack.Screen name="(public)" options={{ headerShown: false }} />
 
-            {/* Protected routes */}
-            <Stack.Screen name="(protected)" options={{ headerShown: false }} />
-          </Stack>
-          <StatusBar style="auto" />
-        </ThemeProvider>
-      </GestureHandlerRootView>
-    </AuthProvider>
+                {/* Auth routes */}
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+
+                {/* Protected routes */}
+                <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+              </Stack>
+              <StatusBar style="auto" />
+            </BottomSheetModalProvider>
+          </ThemeProvider>
+        </GestureHandlerRootView>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
