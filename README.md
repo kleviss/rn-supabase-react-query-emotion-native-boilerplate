@@ -6,6 +6,10 @@ A modern React Native boilerplate with Supabase, React Query, and Emotion Native
 
 This boilerplate provides a solid foundation for building React Native applications with a powerful tech stack. It includes authentication, data fetching, styling, and navigation setup out of the box.
 
+## Article About This Boilerplate
+
+[React Native Boilerplate with Supabase, React Query, and Emotion Native Styling](Article-About-This-Boilerplate.md)
+
 ## Features
 
 - ⚡️ Expo SDK 50
@@ -101,11 +105,11 @@ Before you begin, ensure you have the following installed:
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](Article-About-This-Boilerplate.md) file for details.
 
 ## Support
 
-For support, email your-email@example.com or open an issue in this repository.
+For support, klevissxh@gmail.com or open an issue in this repository.
 
 ## Acknowledgments
 
