@@ -1,18 +1,10 @@
-import { Image, View } from 'react-native';
-
 import type { CustomTheme } from '@/constants/theme';
 import { Link } from 'expo-router';
+import { View } from 'react-native';
 import styled from '@emotion/native';
 import { supabase } from '@/config/supabase';
 import { useState } from 'react';
 import { useTheme } from '@emotion/react';
-
-// const StyledContainer = styled.View`
-//   flex: 1;
-//   padding: 20px;
-//   justify-content: center;
-//   background-color: ${({ theme }) => theme.colors.background};
-// `;
 
 const StyledContainer = styled.View(({ theme }: { theme: CustomTheme }) => ({
   flex: 1,
@@ -21,13 +13,19 @@ const StyledContainer = styled.View(({ theme }: { theme: CustomTheme }) => ({
   backgroundColor: theme.colors.background,
 }));
 
-const StyledText = styled.Text(({ variant, theme, isHeading = false }: { variant?: 'error', theme: CustomTheme, isHeading?: boolean }) => ({
-  fontSize: isHeading ? 24 : 14,
+const StyledText = styled.Text<{ isHeading?: boolean; variant?: 'error' }>(props => ({
+  fontSize: props.isHeading ? 24 : 14,
   fontWeight: 'bold',
-  marginBottom: isHeading ? 20 : 0,
+  marginBottom: props.isHeading ? 20 : 0,
   textAlign: 'center',
-  color: variant === 'error' ? theme.colors.textError : isHeading ? theme.colors.text : theme.colors.textContrast,
+  color: props.variant === 'error' ? props.theme.colors.textError : props.isHeading ? props.theme.colors.text : props.theme.colors.textContrast,
 }));
+
+const StyledImage = styled.Image`
+  width: 100px;
+  height: 100px;
+  align-self: center;
+`;
 
 const StyledInput = styled.TextInput`
   border-width: 1px;
@@ -58,6 +56,7 @@ export default function SignIn() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const theme = useTheme() as CustomTheme;
+  const logoImage = require('../../assets/images/logo.png');
 
   async function signIn() {
 
@@ -75,16 +74,12 @@ export default function SignIn() {
 
   return (
     <StyledContainer>
-      <Image
-        source={require('../../assets/images/logo.png')}
-        style={{ width: 100, height: 100, alignSelf: 'center' }}
-      />
-
-      <StyledText theme={theme} isHeading={true}>Sign In</StyledText>
+      <StyledImage source={logoImage} />
+      <StyledText isHeading={true}>Sign In</StyledText>
 
       {error && (
         <View style={{ marginBottom: 15 }}>
-          <StyledText variant="error" theme={theme}>{error}</StyledText>
+          <StyledText variant="error">{error}</StyledText>
         </View>
       )}
 
