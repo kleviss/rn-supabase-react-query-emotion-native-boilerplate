@@ -1,12 +1,11 @@
-import { ActivityIndicator, Button, RefreshControl, Text, View } from 'react-native';
-import BottomSheet, { BottomSheetBackdrop, BottomSheetBackdropProps, BottomSheetFlatList, BottomSheetModal, BottomSheetModalProvider, BottomSheetView } from '@gorhom/bottom-sheet';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, RefreshControl, View } from 'react-native';
+import { BottomSheetBackdrop, BottomSheetBackdropProps, BottomSheetModal } from '@gorhom/bottom-sheet';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { CarCard } from '@/components/CarCard';
 import type { CustomTheme } from '@/constants/theme';
 import FiltersBottomSheet from '@/components/ui/FiltersBottomSheet';
 import { FlashList } from '@shopify/flash-list';
-import { FontAwesome } from '@expo/vector-icons';
 import { MOCK_CARS } from '@/constants/mock-data';
 import { SearchPageHeader } from '@/components/ui/SearchPageHeader';
 import { StyleSheet } from 'react-native';
@@ -63,9 +62,15 @@ const SearchScreen = () => {
   const [filters, setFilters] = useState<Filters>({});
 
   // Data Fetching
-  const { data: vehicles, isLoading, error, refetch } = useVehicles();
+  // const { data: vehicles, isLoading, error, refetch } = useVehicles();
+  // In order to not hurt my poor modest supabase account, I'm using mock data for now
+  // from mock-data.ts
 
-  // ref
+  const vehicles = MOCK_CARS;
+  const isLoading = false;
+  const error = null;
+  const refetch = () => { }; // refetch is not needed for mock data
+
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
   // variables

@@ -1,22 +1,22 @@
 {
   "expo": {
-    "name": "Gjej-Makine-AL",
-    "slug": "gjej-makine-al",
+    "name": "RN-supabase-react-query-emotion-native-boilerplate",
+    "slug": "rn-supabase-react-query-emotion-native-boilerplate",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/gjm-icon.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.gjejmakine.al",
+      "bundleIdentifier": "com.rn-supabase-react-query-emotion-native-boilerplate",
       "buildNumber": "1",
       "jsEngine": "hermes"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/gjm-icon.png",
+        "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#ffffff"
       },
       "jsEngine": "hermes"
@@ -31,7 +31,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/gjm-splash-icon.png",
+          "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"

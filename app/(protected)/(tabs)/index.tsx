@@ -7,19 +7,20 @@ import { useTheme } from '@emotion/react';
 const StyledContainer = styled.View(({ theme }) => ({
   flex: 1,
   alignItems: 'center',
-  // padding: 20,
-  // hide scrollbar
   overflow: 'hidden',
   backgroundColor: theme.colors.background,
+  paddingHorizontal: 20,
+  paddingTop: 20,
 }));
 
 const StyledTitle = styled.Text(({ theme }) => ({
-  fontSize: 28,
+  fontSize: 24,
   fontWeight: 'bold',
   marginBottom: 30,
   color: theme.colors.text,
   lineHeight: 46,
   marginTop: 20,
+  textAlign: 'center',
 }));
 
 const LinksContainer = styled.View({
@@ -54,28 +55,8 @@ export default function HomeScreen() {
   return (
     <StyledContainer>
       <ScrollView style={{ overflow: 'hidden' }}>
-        <StyledTitle>Welcome to AutoScout AL</StyledTitle>
-
-        <LinksContainer>
-          <StyledLink href="/search">
-            <LinkText>🔍 Find Cars</LinkText>
-          </StyledLink>
-
-          <StyledLink href="/new-listing">
-            <LinkText>📝 Create New Listing</LinkText>
-          </StyledLink>
-
-          <StyledLink href="/saved">
-            <LinkText>❤️ Saved Cars</LinkText>
-          </StyledLink>
-
-          <StyledLink href="/help">
-            <LinkText>❓ Help Center</LinkText>
-          </StyledLink>
-
-
-        </LinksContainer>
+        <StyledTitle>Welcome to RN Supabase React Query Emotion Native Boilerplate</StyledTitle>
       </ScrollView>
-    </StyledContainer>
+    </StyledContainer >
   );
 }

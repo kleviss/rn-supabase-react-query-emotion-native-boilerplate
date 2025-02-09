@@ -11,9 +11,7 @@ export default function ProfileScreen() {
     <ThemedView style={styles.container}>
 
       <View style={styles.linksContainer}>
-        <Link href="/profile" style={styles.link}>
-          <ThemedText style={styles.linkText}>👤 Profile Settings</ThemedText>
-        </Link>
+
 
         <Link href="/my-listings" style={styles.link}>
           <ThemedText style={styles.linkText}>📋 My Listings</ThemedText>
@@ -29,7 +27,7 @@ export default function ProfileScreen() {
 
         {/* logout */}
         {/* <Link href="/logout" style={styles.link}> */}
-        <TouchableOpacity style={styles.link} onPress={() => supabase.auth.signOut()}>
+        <TouchableOpacity style={styles.logoutLink} onPress={() => supabase.auth.signOut()}>
           <ThemedText style={styles.linkText}>🚪 Logout</ThemedText>
         </TouchableOpacity>
       </View>
@@ -56,6 +54,11 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     backgroundColor: '#007AFF',
+  },
+  logoutLink: {
+    padding: 15,
+    borderRadius: 10,
+    backgroundColor: '#b04435',
   },
   linkText: {
     color: 'white',
