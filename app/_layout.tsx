@@ -62,8 +62,12 @@ export default function RootLayout() {
           <ThemeProvider theme={theme}>
             <BottomSheetModalProvider>
               <Stack screenOptions={{ headerShown: false }}>
-                {/* Public routes */}
+                {/* Public routes (non-authenticated) */}
+                <Stack.Screen name="(public)" options={{ headerShown: false }} />
+
+                {/* Auth routes */}
                 <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+
                 {/* Protected routes */}
                 <Stack.Screen name="(protected)" options={{ headerShown: false }} />
               </Stack>

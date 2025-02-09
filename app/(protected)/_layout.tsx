@@ -7,7 +7,7 @@ export default function ProtectedLayout() {
 
   // Redirect to sign in if not authenticated
   if (!session) {
-    return <Redirect href="/(auth)/sign-in" />;
+    return <Redirect href="/(public)" />;
   }
 
 

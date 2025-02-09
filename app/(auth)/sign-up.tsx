@@ -122,6 +122,10 @@ export default function SignUp() {
       <StyledLink href="/sign-in">
         Already have an account? Sign In
       </StyledLink>
+      {/* go back to home screen */}
+      <StyledLink href="/(public)" style={{ marginTop: 10 }}>
+        {"⏮️ Back Home"}
+      </StyledLink>
     </StyledContainer>
   );
 } 
