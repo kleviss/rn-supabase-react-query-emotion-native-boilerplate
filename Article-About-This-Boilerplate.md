@@ -2,6 +2,8 @@
 
 Building mobile applications can often involve a lot of repetitive setup. Boilerplates help alleviate this by providing a pre-configured foundation. This article explores a particularly well-structured React Native boilerplate that leverages some powerful and modern tools: Supabase, React Query, and Emotion Native. It's built using Expo, making cross-platform development (iOS, Android, and web) a streamlined experience.
 
+**This article is also featured on [daily.dev](https://daily.dev/) under the title [A Modern React Native Boilerplate with Supabase, React Query, and Emotion Native](https://app.daily.dev/posts/a-modern-react-native-boilerplate-with-supabase-react-query-and-emotion-native-7tfigl9j7)**
+
 **A Look Under the Hood**
 
 This isn't your average "Hello World" starter kit. It's designed for real-world applications, with features like:
