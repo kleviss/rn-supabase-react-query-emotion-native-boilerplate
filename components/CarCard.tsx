@@ -1,7 +1,61 @@
-import { Image, Pressable, StyleSheet, View } from 'react-native';
-
+import type { CustomTheme } from '@/constants/theme';
+import { Image } from 'react-native';
 import { Link } from 'expo-router';
-import { ThemedText } from './ThemedText';
+import styled from '@emotion/native';
+
+const Card = styled.Pressable(({ theme }) => ({
+  backgroundColor: theme.colors.background,
+  borderRadius: 12,
+  overflow: 'hidden',
+  shadowColor: '#000',
+  shadowOffset: {
+    width: 0,
+    height: 2,
+  },
+  shadowOpacity: 0.1,
+  shadowRadius: 3,
+  elevation: 3,
+  marginBottom: 16,
+  borderWidth: 1,
+  borderColor: theme.colors.textSecondary,
+}));
+
+const CardImage = styled.Image({
+  width: '100%',
+  height: 200,
+});
+
+const Content = styled.View({
+  padding: 16,
+});
+
+const Title = styled.Text(({ theme }) => ({
+  fontSize: 18,
+  fontWeight: '600',
+  marginBottom: 8,
+  color: theme.colors.text,
+  lineHeight: 26,
+}));
+
+const Price = styled.Text(({ theme }) => ({
+  fontSize: 20,
+  fontWeight: 'bold',
+  color: theme.colors.primary,
+  marginBottom: 12,
+  lineHeight: 46,
+}));
+
+const Details = styled.View({
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  flexWrap: 'wrap',
+  gap: 8,
+});
+
+const DetailText = styled.Text(({ theme }) => ({
+  fontSize: 14,
+  color: theme.colors.textSecondary,
+}));
 
 interface CarCardProps {
   id: string;
@@ -16,73 +70,22 @@ interface CarCardProps {
 export function CarCard({ id, title, price, year, mileage, location, imageUrl }: CarCardProps) {
   return (
     <Link href={`/car/${id}`} asChild>
-      <Pressable style={styles.container}>
-        <Image
+      <Card>
+        <CardImage
           source={{ uri: imageUrl }}
-          style={styles.image}
           resizeMode="cover"
         />
-        <View style={styles.content}>
-          <ThemedText style={styles.title}>{title}</ThemedText>
-          <ThemedText style={styles.price}>€{price.toLocaleString()}</ThemedText>
+        <Content>
+          <Title>{title}</Title>
+          <Price>€{price.toLocaleString()}</Price>
 
-          <View style={styles.details}>
-            <ThemedText style={styles.detail}>📅 {year}</ThemedText>
-            <ThemedText style={styles.detail}>🛣️ {mileage.toLocaleString()} km</ThemedText>
-            <ThemedText style={styles.detail}>📍 {location}</ThemedText>
-          </View>
-        </View>
-      </Pressable>
+          <Details>
+            <DetailText>📅 {year}</DetailText>
+            <DetailText>🛣️ {mileage.toLocaleString()} km</DetailText>
+            <DetailText>📍 {location}</DetailText>
+          </Details>
+        </Content>
+      </Card>
     </Link>
   );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  image: {
-    width: '100%',
-    height: 200,
-  },
-  content: {
-    padding: 16,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#1a1a1a',
-    lineHeight: 26,
-  },
-  price: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#2563eb',
-    marginBottom: 12,
-    lineHeight: 46,
-  },
-  details: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  detail: {
-    fontSize: 14,
-    color: '#666',
-  },
-}); 
+} 

@@ -6,7 +6,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { supabase } from '@/config/supabase';
 
-export default function DashboardScreen() {
+export default function ProfileScreen() {
   return (
     <ThemedView style={styles.container}>
 

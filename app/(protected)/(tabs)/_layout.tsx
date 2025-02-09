@@ -1,8 +1,9 @@
 import { Link, Tabs } from 'expo-router';
-import { Pressable, useColorScheme } from 'react-native';
 
-import { Colors } from '@/constants/Colors';
+import type { CustomTheme } from '@/constants/theme';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Pressable } from 'react-native';
+import { useTheme } from '@emotion/react';
 
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
@@ -12,12 +13,20 @@ function TabBarIcon(props: {
 }
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const theme = useTheme() as CustomTheme;
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.textSecondary,
+        tabBarStyle: {
+          backgroundColor: theme.colors.background,
+        },
+        headerStyle: {
+          backgroundColor: theme.colors.background,
+        },
+        headerTintColor: theme.colors.text,
       }}>
       <Tabs.Screen
         name="index"
@@ -41,7 +50,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="dashboard"
+        name="profile"
         options={{
           title: 'Profile',
           tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
